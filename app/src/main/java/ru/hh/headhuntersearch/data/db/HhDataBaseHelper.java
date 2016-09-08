@@ -5,7 +5,6 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
 import ru.hh.headhuntersearch.data.db.table.VacancyCacheTable;
-import ru.hh.headhuntersearch.data.db.table.VacancyRequestTable;
 import ru.hh.headhuntersearch.util.Const;
 
 public class HhDataBaseHelper extends SQLiteOpenHelper {
@@ -18,13 +17,11 @@ public class HhDataBaseHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        db.execSQL(VacancyRequestTable.createTable());
         db.execSQL(VacancyCacheTable.createTable());
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        deleteTable(VacancyRequestTable.TABLE, db);
         deleteTable(VacancyCacheTable.TABLE, db);
         onCreate(db);
     }

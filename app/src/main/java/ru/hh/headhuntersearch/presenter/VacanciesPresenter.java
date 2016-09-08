@@ -17,6 +17,7 @@ import java.util.List;
 
 import ru.hh.headhuntersearch.adapter.VacancyAdapter;
 import ru.hh.headhuntersearch.async.AsyncResult;
+import ru.hh.headhuntersearch.async.loader.CachedVacanciesAsyncLoader;
 import ru.hh.headhuntersearch.async.loader.VacanciesAsyncLoader;
 import ru.hh.headhuntersearch.data.network.ApiInterface;
 import ru.hh.headhuntersearch.entity.converter.DtoToVoConverter;
@@ -32,6 +33,8 @@ public class VacanciesPresenter extends BasePresenter<VacanciesView>
     private static final String KEY_DATA = "internal_data";
 
     private static final int GET_VACANCIES_LOADER_ID = 0;
+    private static final int GET_CACHED_VACANCIES_LOADER_ID = 1;
+
     private final ApiInterface apiInterface;
     private final DtoToVoConverter converter;
     private final SQLiteOpenHelper dbHelper;
@@ -111,6 +114,8 @@ public class VacanciesPresenter extends BasePresenter<VacanciesView>
         switch (id) {
             case GET_VACANCIES_LOADER_ID:
                 return new VacanciesAsyncLoader(getContext(), apiInterface, converter, dbHelper, args);
+            case GET_CACHED_VACANCIES_LOADER_ID:
+                return new CachedVacanciesAsyncLoader(getContext(), args);
         }
         throw new IllegalStateException("Unknown loader id=" + id);
     }
@@ -122,9 +127,11 @@ public class VacanciesPresenter extends BasePresenter<VacanciesView>
             return;
         }
         if (result.getException() != null) {
-            handleLoadingError(result.getException());
+            handleLoadingError(result.getException(), loader.getId());
             return;
         }
+        data.isCacheEnabled = loader.getId() == GET_CACHED_VACANCIES_LOADER_ID;
+
         // we are here if loaded successfully
         VacancyPageVO vacancyPageVO = result.getData();
         switch (data.state) {
@@ -135,6 +142,7 @@ public class VacanciesPresenter extends BasePresenter<VacanciesView>
                 break;
             case REFRESHING:
                 data.currentPage = 1;
+                data.isCacheEnabled = false;
                 data.vacancies = new ArrayList<>(vacancyPageVO.getItems());
                 getView().showLoadFirstPageError(false);
                 getView().showRefreshProgress(false);
@@ -158,17 +166,21 @@ public class VacanciesPresenter extends BasePresenter<VacanciesView>
         }
     }
 
-    private void handleLoadingError(Exception e) {
+    private void handleLoadingError(Exception e, int loaderId) {
         switch (data.state) {
             case LOADING_ADDITIONAL_PAGE:
                 data.state = State.IDLE;
                 getView().showLoadMoreError();
                 break;
             case LOADING_FIRST_PAGE:
-                getView().showVacancies(Collections.emptyList());
-                getView().showSplashProgress(false);
-                getView().showLoadFirstPageError(true);
-                data.state = State.ERROR_COULD_NOT_LOAD_FIRST_PAGE;
+                if (loaderId == GET_VACANCIES_LOADER_ID) {
+                    tryToLoadFromCache();
+                } else {
+                    getView().showVacancies(Collections.emptyList());
+                    getView().showSplashProgress(false);
+                    getView().showLoadFirstPageError(true);
+                    data.state = State.ERROR_COULD_NOT_LOAD_FIRST_PAGE;
+                }
                 break;
             case REFRESHING:
                 getView().showRefreshError();
@@ -176,6 +188,17 @@ public class VacanciesPresenter extends BasePresenter<VacanciesView>
                 data.state = State.IDLE;
                 break;
         }
+    }
+
+    private void tryToLoadFromCache() {
+        LoaderManager loaderManager = getLoaderManager();
+        if (loaderManager == null) {
+            Log.w(TAG, "tryToLoadFromCache: loaderManager is null");
+            return;
+        }
+        Bundle args = new Bundle();
+        args.putString(CachedVacanciesAsyncLoader.ARG_SEARCH_TEXT, data.query);
+        loaderManager.restartLoader(GET_CACHED_VACANCIES_LOADER_ID, args, this);
     }
 
     @Override
@@ -190,11 +213,15 @@ public class VacanciesPresenter extends BasePresenter<VacanciesView>
         data.query = request;
         data.state = State.LOADING_FIRST_PAGE;
         data.currentPage = 1;
+        data.isCacheEnabled = false;
         getView().showSplashProgress(true);
         loadVacanciesPage(data.currentPage);
     }
 
     public void onLoadMoreRequested() {
+        if (data.isCacheEnabled) {
+            return; // don't load more if caching enabled
+        }
         LoaderManager loaderManager = getLoaderManager();
         if (loaderManager == null) {
             Log.w(TAG, "onLoadMoreRequested: loaderManager is null");
@@ -251,9 +278,11 @@ public class VacanciesPresenter extends BasePresenter<VacanciesView>
         private State state = State.INTRO;
         private boolean isEmptyViewShown = false;
         private int totalItems = 0;
+        private boolean isCacheEnabled = false;
 
         public Data() {
         }
+
 
         @Override
         public int describeContents() {
@@ -268,6 +297,7 @@ public class VacanciesPresenter extends BasePresenter<VacanciesView>
             dest.writeInt(this.state == null ? -1 : this.state.ordinal());
             dest.writeByte(this.isEmptyViewShown ? (byte) 1 : (byte) 0);
             dest.writeInt(this.totalItems);
+            dest.writeByte(this.isCacheEnabled ? (byte) 1 : (byte) 0);
         }
 
         protected Data(Parcel in) {
@@ -278,6 +308,7 @@ public class VacanciesPresenter extends BasePresenter<VacanciesView>
             this.state = tmpState == -1 ? null : State.values()[tmpState];
             this.isEmptyViewShown = in.readByte() != 0;
             this.totalItems = in.readInt();
+            this.isCacheEnabled = in.readByte() != 0;
         }
 
         public static final Creator<Data> CREATOR = new Creator<Data>() {
