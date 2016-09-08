@@ -6,11 +6,13 @@ public class BasePageVO<T> {
     private int pagesCount;
     private int currentPage;
     private List<T> items;
+    private int totalItemsCount;
 
-    public BasePageVO(int pagesCount, int currentPage, List<T> items) {
+    public BasePageVO(int pagesCount, int currentPage, List<T> items, int totalItemsCount) {
         this.pagesCount = pagesCount;
         this.currentPage = currentPage;
         this.items = items;
+        this.totalItemsCount = totalItemsCount;
     }
 
     public int getPagesCount() {
@@ -21,7 +23,7 @@ public class BasePageVO<T> {
         this.pagesCount = pagesCount;
     }
 
-    public int getCurrentPage() {
+    public int getPageNumber() {
         return currentPage;
     }
 
@@ -35,5 +37,13 @@ public class BasePageVO<T> {
 
     public void setItems(List<T> items) {
         this.items = items;
+    }
+
+    public int getTotalItemsCount() {
+        return totalItemsCount;
+    }
+
+    public void setTotalItemsCount(int totalItemsCount) {
+        this.totalItemsCount = totalItemsCount;
     }
 }

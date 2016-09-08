@@ -140,13 +140,14 @@ public class VacanciesPresenter extends BasePresenter<VacanciesView>
                 getView().showRefreshProgress(false);
                 break;
             case LOADING_ADDITIONAL_PAGE:
-                ++data.currentPage;
+                data.currentPage = vacancyPageVO.getPageNumber();
                 data.vacancies.addAll(vacancyPageVO.getItems());
                 getView().showLoadingMore(false);
                 break;
         }
         getView().blockRefreshing(false);
         data.state = State.IDLE;
+        data.totalItems = vacancyPageVO.getTotalItemsCount();
         if (data.vacancies.isEmpty()) {
             data.isEmptyViewShown = true;
             getView().showEmptyView(true);
@@ -202,6 +203,9 @@ public class VacanciesPresenter extends BasePresenter<VacanciesView>
         if (data.state != State.IDLE) {
             return; // already doing another loading task
         }
+        if (data.vacancies.size() == data.totalItems) {
+            return; // assume that all items are loaded
+        }
         data.state = State.LOADING_ADDITIONAL_PAGE;
         getView().showLoadingMore(true);
         loadVacanciesPage(data.currentPage + 1);
@@ -246,7 +250,10 @@ public class VacanciesPresenter extends BasePresenter<VacanciesView>
         private List<VacancyVO> vacancies = Collections.emptyList();
         private State state = State.INTRO;
         private boolean isEmptyViewShown = false;
+        private int totalItems = 0;
 
+        public Data() {
+        }
 
         @Override
         public int describeContents() {
@@ -258,17 +265,19 @@ public class VacanciesPresenter extends BasePresenter<VacanciesView>
             dest.writeInt(this.currentPage);
             dest.writeString(this.query);
             dest.writeTypedList(this.vacancies);
-            dest.writeSerializable(this.state);
-        }
-
-        public Data() {
+            dest.writeInt(this.state == null ? -1 : this.state.ordinal());
+            dest.writeByte(this.isEmptyViewShown ? (byte) 1 : (byte) 0);
+            dest.writeInt(this.totalItems);
         }
 
         protected Data(Parcel in) {
             this.currentPage = in.readInt();
             this.query = in.readString();
             this.vacancies = in.createTypedArrayList(VacancyVO.CREATOR);
-            this.state = (State) in.readSerializable();
+            int tmpState = in.readInt();
+            this.state = tmpState == -1 ? null : State.values()[tmpState];
+            this.isEmptyViewShown = in.readByte() != 0;
+            this.totalItems = in.readInt();
         }
 
         public static final Creator<Data> CREATOR = new Creator<Data>() {

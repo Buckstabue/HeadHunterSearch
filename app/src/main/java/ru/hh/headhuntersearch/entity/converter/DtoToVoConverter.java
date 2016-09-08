@@ -21,6 +21,6 @@ public class DtoToVoConverter {
         for (VacancyDto dtoItem : dtoItems) {
             voItems.add(toVacancyVO(dtoItem));
         }
-        return new VacancyPageVO(dto.getPages(), dto.getPage(), voItems);
+        return new VacancyPageVO(dto.getPages(), dto.getPage(), voItems, dto.getFound());
     }
 }

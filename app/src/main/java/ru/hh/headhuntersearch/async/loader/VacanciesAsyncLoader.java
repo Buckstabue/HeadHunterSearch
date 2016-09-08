@@ -43,7 +43,7 @@ public class VacanciesAsyncLoader extends BaseAsyncLoader<VacancyPageVO> {
     protected VacancyPageVO loadData() throws Exception {
         VacancyPaginationDto dto = apiInterface.searchVacancy(searchText, itemsPerPage, pageNumber);
         final VacancyPageVO resultVO = converter.toVacancyPageVO(dto);
-        if (pageNumber == 1) {
+        if (pageNumber == 1 && !resultVO.getItems().isEmpty()) {
             try {
                 VacancyCacheHelper.cacheInDatabase(resultVO.getItems(), searchText, dbHelper);
             } catch (Throwable e) {
