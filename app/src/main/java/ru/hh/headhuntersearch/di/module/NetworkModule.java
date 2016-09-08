@@ -2,9 +2,6 @@ package ru.hh.headhuntersearch.di.module;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.FieldNamingPolicy;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.squareup.okhttp.OkHttpClient;
 
 import javax.inject.Singleton;
@@ -27,15 +24,6 @@ public class NetworkModule {
 
     public NetworkModule(String baseUrl) {
         this.endPoint = baseUrl;
-    }
-
-    @Provides
-    @Singleton
-    Gson provideGson() {
-        // TODO do we need it?
-        GsonBuilder gsonBuilder = new GsonBuilder();
-        gsonBuilder.setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES);
-        return gsonBuilder.create();
     }
 
     @Provides

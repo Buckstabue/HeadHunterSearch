@@ -7,7 +7,7 @@ public final class Const {
         // not intended to instantiate
     }
 
-    //  TODO move to gradle property
+    //  TODO move to gradle properties
     public static final String API_URL = "https://api.hh.ru/";
     public static final String DEVELOPER_EMAIL = "buckstabue@inbox.ru";
     public static final int DATABASE_VERSION = 1;
