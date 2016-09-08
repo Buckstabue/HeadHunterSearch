@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">HeadHunterSearch</string>
+    <string name="search_title">Search</string>
+    <string name="search_hint">Search</string>
+    <string name="error">Error</string>
+    <string name="retry">retry</string>
+    <string name="no_vacancy_found">No vacancy found</string>
+    <string name="error_could_not_load_data">Could not load data</string>
+    <string name="error_could_not_refresh">Could not refresh vacancies</string>
+</resources>
