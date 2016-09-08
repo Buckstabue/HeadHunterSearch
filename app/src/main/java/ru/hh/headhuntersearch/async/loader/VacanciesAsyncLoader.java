@@ -1,7 +1,6 @@
 package ru.hh.headhuntersearch.async.loader;
 
 import android.content.Context;
-import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Bundle;
 import android.util.Log;
 
@@ -20,7 +19,6 @@ public class VacanciesAsyncLoader extends BaseAsyncLoader<VacancyPageVO> {
 
     private final ApiInterface apiInterface;
     private final DtoToVoConverter converter;
-    private final SQLiteOpenHelper dbHelper;
     private final String searchText;
     private final int pageNumber;
     private final int itemsPerPage;
@@ -28,12 +26,10 @@ public class VacanciesAsyncLoader extends BaseAsyncLoader<VacancyPageVO> {
     public VacanciesAsyncLoader(Context context,
                                 ApiInterface apiInterface,
                                 DtoToVoConverter converter,
-                                SQLiteOpenHelper dbHelper,
                                 Bundle args) {
         super(context);
         this.apiInterface = apiInterface;
         this.converter = converter;
-        this.dbHelper = dbHelper;
         this.searchText = args.getString(ARG_SEARCH_TEXT);
         this.pageNumber = args.getInt(ARG_PAGE_NUMBER);
         this.itemsPerPage = args.getInt(ARG_ITEMS_PER_PAGE);
@@ -45,7 +41,7 @@ public class VacanciesAsyncLoader extends BaseAsyncLoader<VacancyPageVO> {
         final VacancyPageVO resultVO = converter.toVacancyPageVO(dto);
         if (pageNumber == 1) {
             try {
-                VacancyCacheHelper.cacheInDatabase(resultVO.getItems(), searchText, dbHelper);
+                VacancyCacheHelper.cacheInDatabase(getContext(), resultVO.getItems(), searchText);
             } catch (Throwable e) {
                 Log.e(TAG, "loadData: error while caching items.", e);
             }

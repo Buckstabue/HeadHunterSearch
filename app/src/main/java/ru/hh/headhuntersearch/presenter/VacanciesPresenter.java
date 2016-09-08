@@ -1,7 +1,6 @@
 package ru.hh.headhuntersearch.presenter;
 
 import android.content.Context;
-import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -37,18 +36,15 @@ public class VacanciesPresenter extends BasePresenter<VacanciesView>
 
     private final ApiInterface apiInterface;
     private final DtoToVoConverter converter;
-    private final SQLiteOpenHelper dbHelper;
     private Data data;
 
     public VacanciesPresenter(Context context,
                               VacanciesView view,
                               ApiInterface apiInterface,
-                              DtoToVoConverter converter,
-                              SQLiteOpenHelper dbHelper) {
+                              DtoToVoConverter converter) {
         super(context, view);
         this.apiInterface = apiInterface;
         this.converter = converter;
-        this.dbHelper = dbHelper;
     }
 
     @Override
@@ -113,7 +109,7 @@ public class VacanciesPresenter extends BasePresenter<VacanciesView>
     public Loader<AsyncResult<VacancyPageVO>> onCreateLoader(int id, Bundle args) {
         switch (id) {
             case GET_VACANCIES_LOADER_ID:
-                return new VacanciesAsyncLoader(getContext(), apiInterface, converter, dbHelper, args);
+                return new VacanciesAsyncLoader(getContext(), apiInterface, converter, args);
             case GET_CACHED_VACANCIES_LOADER_ID:
                 return new CachedVacanciesAsyncLoader(getContext(), args);
         }
@@ -171,6 +167,7 @@ public class VacanciesPresenter extends BasePresenter<VacanciesView>
         data.totalItems = vacancyPageVO.getTotalItemsCount();
         getView().showLoadFirstPageError(false);
         getView().showRefreshProgress(false);
+        getView().showSplashProgress(false);
         getView().blockRefreshing(false);
         if (data.vacancies.isEmpty()) {
             data.isEmptyViewShown = true;
