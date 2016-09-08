@@ -31,7 +31,8 @@ public class VacancyContentProvider extends ContentProvider {
 
     @Override
     public int delete(Uri uri, String selection, String[] selectionArgs) {
-        throw new UnsupportedOperationException("Not yet implemented");
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        return db.delete(VacancyCacheTable.TABLE, selection, selectionArgs);
     }
 
     @Override
@@ -45,7 +46,9 @@ public class VacancyContentProvider extends ContentProvider {
 
     @Override
     public Uri insert(Uri uri, ContentValues values) {
-        throw new UnsupportedOperationException("Not yet implemented");
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        long id = db.insert(VacancyCacheTable.TABLE, null, values);
+        return uri.withAppendedPath(uri, String.valueOf(id));
     }
 
     @Override
@@ -61,7 +64,8 @@ public class VacancyContentProvider extends ContentProvider {
     }
 
     @Override
-    public int update(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
-        throw new UnsupportedOperationException("Not yet implemented");
+    public int update(Uri uri, ContentValues cv, String selection, String[] selectionArgs) {
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        return db.update(VacancyCacheTable.TABLE, cv, selection, selectionArgs);
     }
 }

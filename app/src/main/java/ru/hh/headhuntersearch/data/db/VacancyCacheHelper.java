@@ -17,12 +17,14 @@ public final class VacancyCacheHelper {
     public static void cacheInDatabase(List<VacancyVO> items, String request, SQLiteOpenHelper dbHelper) {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         db.beginTransaction();
-        db.delete(VacancyCacheTable.TABLE,
-                VacancyCacheTable.COLUMN_REQUEST + "=?",
-                new String[]{request});
         try {
-            for (VacancyVO vo : items) {
-                saveVacancy(vo, request, db);
+            db.delete(VacancyCacheTable.TABLE,
+                    VacancyCacheTable.COLUMN_REQUEST + "=?",
+                    new String[]{request});
+            if (!items.isEmpty()) {
+                for (VacancyVO vo : items) {
+                    saveVacancy(vo, request, db);
+                }
             }
             db.setTransactionSuccessful();
         } finally {

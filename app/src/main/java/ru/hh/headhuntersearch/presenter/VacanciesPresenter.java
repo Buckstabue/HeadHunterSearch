@@ -126,36 +126,52 @@ public class VacanciesPresenter extends BasePresenter<VacanciesView>
             Log.w(TAG, "onLoadFinished: view is null");
             return;
         }
+        final int loaderId = loader.getId();
         if (result.getException() != null) {
-            handleLoadingError(result.getException(), loader.getId());
+            handleLoadingError(result.getException(), loaderId);
             return;
         }
-        data.isCacheEnabled = loader.getId() == GET_CACHED_VACANCIES_LOADER_ID;
-
+        data.isCacheEnabled = loaderId == GET_CACHED_VACANCIES_LOADER_ID;
         // we are here if loaded successfully
         VacancyPageVO vacancyPageVO = result.getData();
         switch (data.state) {
             case LOADING_FIRST_PAGE:
-                data.vacancies = new ArrayList<>(vacancyPageVO.getItems());
-                getView().showLoadFirstPageError(false);
-                getView().showSplashProgress(false);
+                onLoadingFirstPageComplete(vacancyPageVO);
                 break;
             case REFRESHING:
-                data.currentPage = 1;
-                data.isCacheEnabled = false;
-                data.vacancies = new ArrayList<>(vacancyPageVO.getItems());
-                getView().showLoadFirstPageError(false);
-                getView().showRefreshProgress(false);
+                onRefreshingPageComplete(vacancyPageVO);
                 break;
             case LOADING_ADDITIONAL_PAGE:
-                data.currentPage = vacancyPageVO.getPageNumber();
-                data.vacancies.addAll(vacancyPageVO.getItems());
-                getView().showLoadingMore(false);
+                onLoadingAdditionalPageComplete(vacancyPageVO);
+                break;
+            default:
+                Log.w(TAG, "onLoadFinished: unprocessed state=" + data.state);
                 break;
         }
+    }
+
+    private void onLoadingAdditionalPageComplete(VacancyPageVO vacancyPageVO) {
+        data.currentPage = vacancyPageVO.getPageNumber();
+        data.vacancies.addAll(vacancyPageVO.getItems());
+        getView().showLoadingMore(false);
         getView().blockRefreshing(false);
         data.state = State.IDLE;
         data.totalItems = vacancyPageVO.getTotalItemsCount();
+        getView().showVacancies(data.vacancies);
+    }
+
+    private void onRefreshingPageComplete(VacancyPageVO vacancyPageVO) {
+        onLoadingFirstPageComplete(vacancyPageVO);
+    }
+
+    private void onLoadingFirstPageComplete(VacancyPageVO vacancyPageVO) {
+        data.currentPage = 1;
+        data.state = State.IDLE;
+        data.vacancies = new ArrayList<>(vacancyPageVO.getItems());
+        data.totalItems = vacancyPageVO.getTotalItemsCount();
+        getView().showLoadFirstPageError(false);
+        getView().showRefreshProgress(false);
+        getView().blockRefreshing(false);
         if (data.vacancies.isEmpty()) {
             data.isEmptyViewShown = true;
             getView().showEmptyView(true);

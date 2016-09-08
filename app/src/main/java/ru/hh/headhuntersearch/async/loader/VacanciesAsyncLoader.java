@@ -43,11 +43,11 @@ public class VacanciesAsyncLoader extends BaseAsyncLoader<VacancyPageVO> {
     protected VacancyPageVO loadData() throws Exception {
         VacancyPaginationDto dto = apiInterface.searchVacancy(searchText, itemsPerPage, pageNumber);
         final VacancyPageVO resultVO = converter.toVacancyPageVO(dto);
-        if (pageNumber == 1 && !resultVO.getItems().isEmpty()) {
+        if (pageNumber == 1) {
             try {
                 VacancyCacheHelper.cacheInDatabase(resultVO.getItems(), searchText, dbHelper);
             } catch (Throwable e) {
-                Log.e(TAG, "loadData: error while caching items", e);
+                Log.e(TAG, "loadData: error while caching items.", e);
             }
         }
 
